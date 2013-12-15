@@ -1,19 +1,22 @@
 package sync;
 
+import handlers.HandleClient;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Scanner;
+import java.util.LinkedList;
 
 public class SyncServer {
 	
-	protected Integer port;
-	protected ServerSocket sock;
-	protected Socket client;
+	private Integer port;
+	private ServerSocket sock;
+	private LinkedList<HandleClient> handlers;
 	
 	public SyncServer(Integer port) {
 		this.port = port;
 		this.setSocket(this.port);
+		this.handlers = new LinkedList<HandleClient>(); 
 	}
 	
 	public boolean setSocket(Integer port) {
@@ -28,31 +31,19 @@ public class SyncServer {
 		return flag;
 	}
 	
+	
 	public void serveforever() {
 		try{
-			Scanner scan;
 			while(true) {
-				
+				System.out.println("Server: aguardando nova conexao...");
 				// Aguarda uma requisicao de um cliente
-				this.client = this.sock.accept();
-				System.out.print("Server: Nova conexao com o cliente: ");
-				System.out.println( this.client.getInetAddress().getHostAddress() );
+				Socket sock = this.sock.accept();
 				
-				// Cria um novo buffer para leitura do socket
-				scan = new Scanner( this.client.getInputStream() );
+				// Adiciona um novo Handler para tratar o cliente
+				this.handlers.addLast(new HandleClient( sock ));
 				
-				// Realiza a leitura dos pacotes recebidos
-				while(scan.hasNextLine()) {
-					String data = scan.next();
-					System.out.println(data);
-				}
-				
-				// Fecha o buffer de leitura
-				scan.close();
-				
-				// Fecha a conexao tcp com o cliente
-				this.client.close();
-				
+				// Executa o Handler como uma thread
+				this.handlers.getLast().start();
 			}
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -61,12 +52,15 @@ public class SyncServer {
 	
 	public void finalize() {
 		try {
+			// Aguarda a finalizacao de cada uma das threads
+			for(HandleClient client : this.handlers) {
+				client.join();
+			}
+			// Fecha o socket do servidor
 			this.sock.close();
 			System.out.println("Server: fechando servidor.");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
-	
 }

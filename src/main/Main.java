@@ -37,9 +37,15 @@ public class Main extends Thread {
 	public void syncClientApp() {
 		String host = "localhost";
 		int port = 6969;
+		String data = "";
+		for(Integer i=0; i<1000; i++) {
+			data += "teste";
+			data += i.toString();
+			data += "\n";
+		}
+		data += "END\n";
 		SyncClient client = new SyncClient(host, port);
 		try {
-			String data = "teste01";
 			client.sendData(data);
 		} catch(Exception e) {
 			e.printStackTrace();

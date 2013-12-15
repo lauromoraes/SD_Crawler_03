@@ -22,7 +22,11 @@ public class SyncClient {
 	public boolean sendData(String data) {
 		boolean flag = false;
 		try {
-			this.dataOut.writeBytes(data);
+			if(!this.sock.isClosed()) {
+				this.dataOut.writeBytes(data);
+			} else {
+				System.out.println("Nao eh possivel enviar dados. Conexao fechada.");
+			}
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -32,7 +36,11 @@ public class SyncClient {
 	public String recvData() {
 		String data = null;
 		try {
-			data = this.dataIn.readLine();
+			if(!this.sock.isClosed()) {
+				data = this.dataIn.readLine();
+			} else {
+				System.out.println("Nao eh possivel receber dados. Conexao fechada.");
+			}
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
